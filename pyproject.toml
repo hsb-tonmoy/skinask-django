@@ -1,0 +1,33 @@
+[project]
+name = "skinask_backend"
+version = "0.0.1"
+
+[tool.ruff]
+line-length = 100
+exclude = [
+    "**/migrations/*.py",
+    ".env",
+    ".eggs",
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".env",
+    ".vscode",
+    "__pypackages__",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "env",
+]
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "Q"]
+ignore = ["F401", "F403"]
+fixable = ["I001", "F401"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+extra-standard-library = ["typing_extensions"]
+lines-after-imports = 2
+order-by-type = false
