@@ -43,7 +43,9 @@ class SkincareRoutine(models.Model):
 
 
 class SkincareRoutineStep(models.Model):
-    skincare_routine = models.ForeignKey(SkincareRoutine, on_delete=models.CASCADE)
+    skincare_routine = models.ForeignKey(
+        SkincareRoutine, on_delete=models.CASCADE, related_name="steps"
+    )
     product = models.ForeignKey(SkincareProduct, on_delete=models.CASCADE, null=True, blank=True)
     product_name = models.CharField(max_length=255, null=True, blank=True)
     product_type = models.ForeignKey(SkincareRoutineProductType, on_delete=models.CASCADE)

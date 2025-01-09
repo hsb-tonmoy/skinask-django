@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "ninja_extra",
     "ingredient_dictionary",
     "skincare_product",
     "skincare_routine",
