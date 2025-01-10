@@ -1,11 +1,11 @@
-from typing import Optional
+from datetime import datetime
+from typing import Dict, List, Optional
 
 from ninja import Schema
 
-from skincare_product.schemas import SkincareProductSchema
+from skincare_routine.models import DayOfWeek
 
 
-# Generic schemas
 class SkincareRoutineProductTypeSchema(Schema):
     id: int
     name: str
@@ -18,19 +18,38 @@ class SkincareRoutinePeriodSchema(Schema):
 
 class SkincareRoutineStepSchema(Schema):
     id: int
-    product: Optional[SkincareProductSchema] = None
+    product: Optional[dict] = None  # Simplified from SkincareProductSchema
     product_name: Optional[str] = None
     product_type: SkincareRoutineProductTypeSchema
     period: SkincareRoutinePeriodSchema
+    day_of_week: str
+    order: int
 
 
-class SkincareRoutineSchema(Schema):
+class WeeklyRoutineSchema(Schema):
     id: int
     name: str
-    steps: list[SkincareRoutineStepSchema]
+    days: Dict[str, List[SkincareRoutineStepSchema]]
+    updated_at: datetime
+
+    @classmethod
+    def from_orm(cls, routine):
+        return cls(
+            id=routine.id,
+            name=routine.name,
+            days={
+                day.value: [
+                    SkincareRoutineStepSchema.model_validate(step)
+                    for step in routine.steps.all()
+                    if step.day_of_week == day.value
+                ]
+                for day in DayOfWeek
+            },
+            updated_at=routine.updated_at,
+        )
 
 
-# API schemas
-class SkincareRoutineRouteOptionsSchema(Schema):
-    product_types: list[SkincareRoutineProductTypeSchema]
-    periods: list[SkincareRoutinePeriodSchema]
+class RoutineOptionsSchema(Schema):
+    product_types: List[SkincareRoutineProductTypeSchema]
+    periods: List[SkincareRoutinePeriodSchema]
+    days_of_week: List[Dict[str, str]]

@@ -23,7 +23,7 @@ exclude = [
 
 [tool.ruff.lint]
 select = ["F", "E", "W", "Q"]
-ignore = ["F401", "F403"]
+ignore = ["F401", "F403", "E501"]
 fixable = ["I001", "F401"]
 
 [tool.ruff.lint.isort]
