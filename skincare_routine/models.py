@@ -75,6 +75,8 @@ class SkincareRoutineStep(models.Model):
     day_of_week = models.CharField(
         max_length=3, choices=DayOfWeek.choices, db_index=True, default=DayOfWeek.MONDAY
     )
+    color = models.CharField(max_length=255, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
     order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

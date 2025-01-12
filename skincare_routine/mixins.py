@@ -41,8 +41,13 @@ class SkincareRoutinesMixin:
 
     def get_routine_steps_options(self) -> RoutineOptionsSchema:
         """Get all options needed for routine creation/editing"""
+        product_types = SkincareRoutineProductType.objects.all()
+        periods = SkincareRoutinePeriod.objects.all()
         return RoutineOptionsSchema(
-            product_types=SkincareRoutineProductType.objects.all(),
-            periods=SkincareRoutinePeriod.objects.all(),
+            product_types=[
+                {"value": product_type.id, "label": product_type.name}
+                for product_type in product_types
+            ],
+            periods=[{"value": period.id, "label": period.name} for period in periods],
             days_of_week=[{"value": day.value, "label": day.label} for day in DayOfWeek],
         )

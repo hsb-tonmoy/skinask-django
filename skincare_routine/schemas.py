@@ -6,6 +6,16 @@ from ninja import Schema
 from skincare_routine.models import DayOfWeek
 
 
+class SkincareRoutineOptionsProductTypeSchema(Schema):
+    value: int
+    label: str
+
+
+class SkincareRoutineOptionsPeriodSchema(Schema):
+    value: int
+    label: str
+
+
 class SkincareRoutineProductTypeSchema(Schema):
     id: int
     name: str
@@ -23,6 +33,8 @@ class SkincareRoutineStepSchema(Schema):
     product_type: SkincareRoutineProductTypeSchema
     period: SkincareRoutinePeriodSchema
     day_of_week: str
+    color: Optional[str] = None
+    notes: Optional[str] = None
     order: int
 
 
@@ -50,6 +62,16 @@ class WeeklyRoutineSchema(Schema):
 
 
 class RoutineOptionsSchema(Schema):
-    product_types: List[SkincareRoutineProductTypeSchema]
-    periods: List[SkincareRoutinePeriodSchema]
+    product_types: List[SkincareRoutineOptionsProductTypeSchema]
+    periods: List[SkincareRoutineOptionsPeriodSchema]
     days_of_week: List[Dict[str, str]]
+
+
+class CreateRoutineStepRequest(Schema):
+    color: Optional[str]
+    days_of_week: List[str]  # List of day_of_week values
+    product_name: str
+    notes: Optional[str]
+    period: int  # period_id
+    skincare_routine: int  # routine_id
+    product_type: int  # product_type_id
