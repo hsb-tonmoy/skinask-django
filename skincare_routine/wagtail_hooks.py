@@ -2,27 +2,27 @@ from django.utils.translation import gettext_lazy as _
 from wagtail import hooks
 from wagtail_modeladmin.options import ModelAdmin, ModelAdminGroup, modeladmin_register
 
-from .models import SkincareRoutinePage, SkincareRoutinePeriod, SkincareRoutineProductType
+from .models import SkincareRoutine, SkincareRoutinePeriod, SkincareRoutineProductType
 
 
 class SkincareRoutineAdmin(ModelAdmin):
-    model = SkincareRoutinePage
+    model = SkincareRoutine
     menu_label = "Routines"
     menu_icon = "list-ul"
     menu_order = 100
-    list_display = ("title", "created_by", "latest_revision_created_at", "live")
-    list_filter = ("created_by", "live")
+    list_display = ("title", "created_by", "created_at", "updated_at")
+    list_filter = ("created_by",)
     search_fields = ("title", "created_by__username")
-
-    def save_model(self, request, instance, form, change):
-        instance.save(user=request.user)
-        return instance
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if not request.user.is_superuser:
             qs = qs.filter(created_by=request.user)
         return qs
+
+    def save_model(self, request, instance, form, change):
+        instance.save(user=request.user)
+        return instance
 
 
 class ProductTypeAdmin(ModelAdmin):
