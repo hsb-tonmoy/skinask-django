@@ -60,4 +60,7 @@ class SkincareRoutinesController(SkincareRoutinesMixin):
         # Clear cache
         cache.delete(f"routine_weekly_data_{routine.id}")
 
-        return self.format_routine_response(routine)
+        # Get a fresh instance of the routine with all steps
+        updated_routine = self.get_object(routine.id)
+
+        return self.format_routine_response(updated_routine)
