@@ -50,9 +50,30 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "wagtail_modeladmin",
     "ninja_extra",
+    "ninja_jwt",
+    "allauth",
+    "allauth.account",
+    "allauth.headless",
+    "allauth.socialaccount",
+    "users",
     "skincare_product",
     "skincare_routine",
 ]
+
+AUTH_USER_MODEL = "users.CustomUser"
+HEADLESS_ONLY = True
+HEADLESS_TOKEN_STRATEGY = "users.auth.TokenStrategy"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
+
+NINJA_JWT = {
+    "AUTH_TOKEN_CLASSES": ("ninja_jwt.tokens.SlidingToken",),
+}
 
 MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -63,6 +84,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "skinask_backend.urls"
@@ -80,9 +102,15 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.request",
             ],
         },
     },
+]
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 WSGI_APPLICATION = "skinask_backend.wsgi.application"
