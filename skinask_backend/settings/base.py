@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.headless",
     "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
     "users",
     "skincare_product",
     "skincare_routine",
@@ -63,6 +64,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = "users.CustomUser"
 HEADLESS_ONLY = True
 HEADLESS_TOKEN_STRATEGY = "users.auth.TokenStrategy"
+HEADLESS_ADAPTER = "users.auth.HeadlessAdapter"
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_USERNAME_REQUIRED = False
@@ -70,6 +72,26 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APPS": [
+            {
+                "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+                "secret": os.getenv("GOOGLE_CLIENT_SECRET"),
+                "key": "",
+            },
+        ],
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        "OAUTH_PKCE_ENABLED": True,
+    }
+}
 
 NINJA_JWT = {
     "AUTH_TOKEN_CLASSES": ("ninja_jwt.tokens.SlidingToken",),
