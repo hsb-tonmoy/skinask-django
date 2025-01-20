@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from datetime import timedelta
 
 from dotenv import load_dotenv
 
@@ -95,6 +96,8 @@ SOCIALACCOUNT_PROVIDERS = {
 
 NINJA_JWT = {
     "AUTH_TOKEN_CLASSES": ("ninja_jwt.tokens.SlidingToken",),
+    "SLIDING_TOKEN_LIFETIME": timedelta(hours=24),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=30),
 }
 
 MIDDLEWARE = [
