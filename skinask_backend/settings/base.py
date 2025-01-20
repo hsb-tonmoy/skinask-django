@@ -95,9 +95,8 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 NINJA_JWT = {
-    "AUTH_TOKEN_CLASSES": ("ninja_jwt.tokens.SlidingToken",),
-    "SLIDING_TOKEN_LIFETIME": timedelta(hours=24),
-    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=30),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=2),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
 MIDDLEWARE = [
