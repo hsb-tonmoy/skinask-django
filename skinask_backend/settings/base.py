@@ -73,6 +73,13 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
+ACCOUNT_EMAIL_VERIFICATION = "none"
+
+HEADLESS_FRONTEND_URLS = {
+    "account_confirm_email": "https://app.skinask.com/account/verify-email/{key}",
+    "account_reset_password_from_key": "https://app.skinask.com/account/password/reset/key/{key}",
+    "account_signup": "https://app.skinask.com/account/signup",
+}
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
