@@ -3,12 +3,13 @@ from typing import List
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 from ninja_extra import api_controller, route
+from ninja_jwt.authentication import JWTAuth
 
 from .mixins import SkincareRoutinesMixin
 from .schemas import CreateRoutineStepRequest, RoutineOptionsSchema, WeeklyRoutineSchema
 
 
-@api_controller("/skincare-routines", tags=["Skincare Routines"])
+@api_controller("/skincare-routines", tags=["Skincare Routines"], auth=JWTAuth())
 class SkincareRoutinesController(SkincareRoutinesMixin):
     @route.get("", response=List[WeeklyRoutineSchema])
     def list_routines(self):

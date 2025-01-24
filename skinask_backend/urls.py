@@ -9,6 +9,8 @@ from .api import api
 
 urlpatterns = [
     path("api/", api.urls),
+    path("accounts/", include("allauth.urls")),
+    path("api/allauth/", include("allauth.headless.urls")),
     path("django-admin/", admin.site.urls),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from datetime import timedelta
 
 from dotenv import load_dotenv
 
@@ -50,9 +51,60 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "wagtail_modeladmin",
     "ninja_extra",
+    "ninja_jwt",
+    "allauth",
+    "allauth.account",
+    "allauth.headless",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "users",
     "skincare_product",
     "skincare_routine",
 ]
+
+AUTH_USER_MODEL = "users.CustomUser"
+HEADLESS_ONLY = True
+HEADLESS_TOKEN_STRATEGY = "users.auth.TokenStrategy"
+HEADLESS_ADAPTER = "users.auth.HeadlessAdapter"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
+ACCOUNT_EMAIL_VERIFICATION = "none"
+
+HEADLESS_FRONTEND_URLS = {
+    "account_confirm_email": "https://app.skinask.com/account/verify-email/{key}",
+    "account_reset_password_from_key": "https://app.skinask.com/account/password/reset/key/{key}",
+    "account_signup": "https://app.skinask.com/account/signup",
+}
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APPS": [
+            {
+                "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+                "secret": os.getenv("GOOGLE_CLIENT_SECRET"),
+                "key": "",
+            },
+        ],
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        "OAUTH_PKCE_ENABLED": True,
+    }
+}
+
+NINJA_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+}
 
 MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -63,6 +115,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "skinask_backend.urls"
@@ -80,9 +133,15 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.request",
             ],
         },
     },
+]
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 WSGI_APPLICATION = "skinask_backend.wsgi.application"
