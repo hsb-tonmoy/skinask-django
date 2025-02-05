@@ -18,8 +18,7 @@ class SkincareRoutinesMixin:
     def get_queryset(self) -> QuerySet:
         """Get queryset with optimized prefetch_related"""
         return (
-            SkincareRoutine.objects
-            # .filter(created_by=self.request.user)
+            SkincareRoutine.objects.filter(created_by=self.context.request.auth)
             .prefetch_related(
                 Prefetch(
                     "steps",
@@ -27,7 +26,8 @@ class SkincareRoutinesMixin:
                         "sort_order", "day_of_week"
                     ),
                 )
-            ).order_by("-created_at")
+            )
+            .order_by("-created_at")
         )
 
     def get_object(self, pk: int) -> SkincareRoutine:

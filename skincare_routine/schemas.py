@@ -88,7 +88,16 @@ class CreateRoutineStepRequest(Schema):
     color: Optional[str]
     days_of_week: List[str]
     product_name: str
-    notes: Optional[str]
+    notes: Optional[str] = None
     period: int
     skincare_routine: int
     product_type: int
+
+
+class UpdateRoutineStepRequest(Schema):
+    color: Optional[str] = None
+    day_of_week: Optional[str] = None
+    product_name: Optional[str] = None
+    notes: Optional[str] = None
+    period: Optional[int] = None
+    product_type: Optional[int] = None
