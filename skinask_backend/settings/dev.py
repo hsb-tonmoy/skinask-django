@@ -3,10 +3,11 @@ from .base import *
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-*#-3e-9ob2j-y%z-fxj8t2nee#tvas-8u5ihec_gq7_4u-@qk&"
+WAGTAILADMIN_BASE_URL = "https://dev.skinask.com"
 
-# SECURITY WARNING: define the correct hosts in production!
+# Security
 ALLOWED_HOSTS = ["*"]
+CSRF_TRUSTED_ORIGINS = ["https://dev.skinask.com"]
 
+# Email
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

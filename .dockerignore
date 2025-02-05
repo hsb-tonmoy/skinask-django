@@ -1,6 +1,5 @@
-# Django project
-/media/
-/static/
+fly.toml
+.git/
 *.sqlite3
 
 # Python and others
