@@ -54,7 +54,7 @@ class PeriodAdmin(ModelAdmin):
 
 
 class SkincareSettingsGroup(ModelAdminGroup):
-    menu_label = "Skincare"
+    menu_label = "Skincare Routine"
     menu_icon = "list-ul"
     menu_order = 200
     items = (
