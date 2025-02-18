@@ -9,6 +9,8 @@ from modelcluster.models import ClusterableModel
 from wagtail.admin.panels import FieldPanel, InlinePanel
 from wagtail.models import Orderable
 
+from skincare_product.models import SkincareProduct
+
 User = get_user_model()
 
 
@@ -123,6 +125,9 @@ class RoutineStep(Orderable):
         blank=True,
         help_text="Name of the product if not selecting from catalog",
     )
+    product = models.ForeignKey(
+        SkincareProduct, on_delete=models.PROTECT, related_name="routine_steps", null=True, blank=True
+    )
     product_type = models.ForeignKey(
         SkincareRoutineProductType, on_delete=models.PROTECT, related_name="routine_steps"
     )
@@ -165,22 +170,20 @@ class RoutineStep(Orderable):
             "TUE": {"isActive": True, "times": [timestamp_in_ms, ...]},
             ...
         }
-
-        This method:
-          1. Deletes existing reminders for the step.
-          2. Converts each timestamp from milliseconds to a timezone-aware datetime in UTC.
-          3. Creates new StepReminder instances.
         """
         # Clear existing reminders
         self.reminders.all().delete()
 
         for day, data in reminder_data.items():
-            if data.get("isActive"):
-                for ts in data.get("times", []):
+            if data.is_active:  # Access the field directly instead of using get()
+                for ts in data.times:  # Access times directly
                     # Convert from milliseconds to seconds, then to a datetime object in UTC.
-                    dt = datetime.datetime.fromtimestamp(ts / 1000.0, tz=timezone.utc)
+                    dt = datetime.datetime.fromtimestamp(ts / 1000.0, tz=datetime.UTC)
                     StepReminder.objects.create(
-                        step=self, day_of_week=day, is_active=True, reminder_time=dt
+                        step=self,
+                        day_of_week=day,
+                        is_active=True,
+                        reminder_time=dt
                     )
 
 

@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 from ninja import Schema
 
 from skincare_routine.models import RoutineStep
+from skincare_product.schemas import SkincareProductSchema
 
 
 class SkincareRoutineOptionsProductTypeSchema(Schema):
@@ -26,13 +27,19 @@ class SkincareRoutinePeriodSchema(Schema):
     name: str
 
 
+class ReminderTimeSchema(Schema):
+    is_active: bool
+    times: List[int]  # timestamps in milliseconds
+
+
 class SkincareRoutineStepSchema(Schema):
     id: Optional[int] = None
-    product: Optional[dict] = None
+    product: Optional[SkincareProductSchema] = None
     product_name: Optional[str] = None
     product_type: SkincareRoutineProductTypeSchema
     period: SkincareRoutinePeriodSchema
     day_of_week: str
+    reminders: Optional[Dict[str, ReminderTimeSchema]] = None
     color: Optional[str] = None
     notes: Optional[str] = None
     sort_order: int
@@ -41,6 +48,7 @@ class SkincareRoutineStepSchema(Schema):
     def model_validate(cls, obj):
         return cls(
             id=obj.id,
+            product=obj.product,
             product_name=obj.product_name,
             product_type=SkincareRoutineProductTypeSchema(
                 id=obj.product_type.id, name=obj.product_type.name
@@ -84,14 +92,20 @@ class RoutineOptionsSchema(Schema):
     days_of_week: List[Dict[str, str]]
 
 
+class ProductSelectionSchema(Schema):
+    value: int
+    label: str
+
+
 class CreateRoutineStepRequest(Schema):
     color: Optional[str]
     days_of_week: List[str]
-    product_name: str
+    product: ProductSelectionSchema
     notes: Optional[str] = None
     period: int
     skincare_routine: int
     product_type: int
+    reminders: Dict[str, ReminderTimeSchema]
 
 
 class UpdateRoutineStepRequest(Schema):
@@ -101,3 +115,4 @@ class UpdateRoutineStepRequest(Schema):
     notes: Optional[str] = None
     period: Optional[int] = None
     product_type: Optional[int] = None
+    reminders: Optional[Dict[str, ReminderTimeSchema]] = None
