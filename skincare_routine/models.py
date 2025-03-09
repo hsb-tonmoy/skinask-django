@@ -126,7 +126,11 @@ class RoutineStep(Orderable):
         help_text="Name of the product if not selecting from catalog",
     )
     product = models.ForeignKey(
-        SkincareProduct, on_delete=models.PROTECT, related_name="routine_steps", null=True, blank=True
+        SkincareProduct,
+        on_delete=models.PROTECT,
+        related_name="routine_steps",
+        null=True,
+        blank=True,
     )
     product_type = models.ForeignKey(
         SkincareRoutineProductType, on_delete=models.PROTECT, related_name="routine_steps"
@@ -166,24 +170,23 @@ class RoutineStep(Orderable):
 
         The expected reminder_data format:
         {
-            "MON": {"isActive": True, "times": [timestamp_in_ms, ...]},
-            "TUE": {"isActive": True, "times": [timestamp_in_ms, ...]},
+            "MON": {"is_active": True, "times": [timestamp_in_ms, ...]},
+            "TUE": {"is_active": True, "times": [timestamp_in_ms, ...]},
             ...
         }
         """
-        # Clear existing reminders
-        self.reminders.all().delete()
-
+        # Clear existing reminders for the current day
         for day, data in reminder_data.items():
-            if data.is_active:  # Access the field directly instead of using get()
-                for ts in data.times:  # Access times directly
+            self.reminders.filter(day_of_week=day).delete()
+
+            if (
+                data.is_active and data.times
+            ):  # Check if both is_active is True and times list is not empty
+                for ts in data.times:
                     # Convert from milliseconds to seconds, then to a datetime object in UTC.
                     dt = datetime.datetime.fromtimestamp(ts / 1000.0, tz=datetime.UTC)
                     StepReminder.objects.create(
-                        step=self,
-                        day_of_week=day,
-                        is_active=True,
-                        reminder_time=dt
+                        step=self, day_of_week=day, is_active=True, reminder_time=dt
                     )
 
 

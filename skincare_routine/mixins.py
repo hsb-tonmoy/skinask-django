@@ -22,9 +22,9 @@ class SkincareRoutinesMixin:
             .prefetch_related(
                 Prefetch(
                     "steps",
-                    queryset=RoutineStep.objects.select_related("product_type", "period").order_by(
-                        "sort_order", "day_of_week"
-                    ),
+                    queryset=RoutineStep.objects.select_related("product_type", "period")
+                    .prefetch_related("reminders")
+                    .order_by("sort_order", "day_of_week"),
                 )
             )
             .order_by("-created_at")

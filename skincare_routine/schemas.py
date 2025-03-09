@@ -3,8 +3,8 @@ from typing import Dict, List, Optional
 
 from ninja import Schema
 
-from skincare_routine.models import RoutineStep
 from skincare_product.schemas import SkincareProductSchema
+from skincare_routine.models import RoutineStep
 
 
 class SkincareRoutineOptionsProductTypeSchema(Schema):
@@ -31,6 +31,10 @@ class ReminderTimeSchema(Schema):
     is_active: bool
     times: List[int]  # timestamps in milliseconds
 
+    class Config:
+        # Allow extra fields to be ignored
+        extra = "ignore"
+
 
 class SkincareRoutineStepSchema(Schema):
     id: Optional[int] = None
@@ -39,13 +43,27 @@ class SkincareRoutineStepSchema(Schema):
     product_type: SkincareRoutineProductTypeSchema
     period: SkincareRoutinePeriodSchema
     day_of_week: str
-    reminders: Optional[Dict[str, ReminderTimeSchema]] = None
+    reminders: Optional[ReminderTimeSchema] = None
     color: Optional[str] = None
     notes: Optional[str] = None
     sort_order: int
 
     @classmethod
     def model_validate(cls, obj):
+        # Process reminders
+        reminders_data = None
+        if obj.reminders.exists():
+            # Get all reminders for this step on the current day
+            day_reminders = obj.reminders.filter(day_of_week=obj.day_of_week)
+            if day_reminders.exists():
+                # Extract timestamps in milliseconds
+                reminder_times = [
+                    int(reminder.reminder_time.timestamp() * 1000) for reminder in day_reminders
+                ]
+                reminders_data = ReminderTimeSchema(
+                    is_active=day_reminders.first().is_active, times=reminder_times
+                )
+
         return cls(
             id=obj.id,
             product=obj.product,
@@ -57,6 +75,7 @@ class SkincareRoutineStepSchema(Schema):
             day_of_week=obj.day_of_week,
             color=obj.color,
             notes=obj.notes,
+            reminders=reminders_data,
             sort_order=obj.sort_order,
         )
 
@@ -107,6 +126,10 @@ class CreateRoutineStepRequest(Schema):
     product_type: int
     reminders: Dict[str, ReminderTimeSchema]
 
+    class Config:
+        # Allow extra fields to be ignored
+        extra = "ignore"
+
 
 class UpdateRoutineStepRequest(Schema):
     color: Optional[str] = None
@@ -116,3 +139,7 @@ class UpdateRoutineStepRequest(Schema):
     period: Optional[int] = None
     product_type: Optional[int] = None
     reminders: Optional[Dict[str, ReminderTimeSchema]] = None
+
+    class Config:
+        # Allow extra fields to be ignored
+        extra = "ignore"
