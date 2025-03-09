@@ -1,10 +1,15 @@
+import datetime
+
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import models
+from django.utils import timezone
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from wagtail.admin.panels import FieldPanel, InlinePanel
 from wagtail.models import Orderable
+
+from skincare_product.models import SkincareProduct
 
 User = get_user_model()
 
@@ -120,6 +125,13 @@ class RoutineStep(Orderable):
         blank=True,
         help_text="Name of the product if not selecting from catalog",
     )
+    product = models.ForeignKey(
+        SkincareProduct,
+        on_delete=models.PROTECT,
+        related_name="routine_steps",
+        null=True,
+        blank=True,
+    )
     product_type = models.ForeignKey(
         SkincareRoutineProductType, on_delete=models.PROTECT, related_name="routine_steps"
     )
@@ -146,3 +158,52 @@ class RoutineStep(Orderable):
 
     def __str__(self):
         return f"{self.get_day_of_week_display()} - {self.product_name or 'Unnamed Step'}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Clear any cached data that might depend on this step
+        self.routine.clear_cache()
+
+    def update_reminders(self, reminder_data):
+        """
+        Update reminders for this step based on frontend data.
+
+        The expected reminder_data format:
+        {
+            "MON": {"is_active": True, "times": [timestamp_in_ms, ...]},
+            "TUE": {"is_active": True, "times": [timestamp_in_ms, ...]},
+            ...
+        }
+        """
+        # Clear existing reminders for the current day
+        for day, data in reminder_data.items():
+            self.reminders.filter(day_of_week=day).delete()
+
+            if (
+                data.is_active and data.times
+            ):  # Check if both is_active is True and times list is not empty
+                for ts in data.times:
+                    # Convert from milliseconds to seconds, then to a datetime object in UTC.
+                    dt = datetime.datetime.fromtimestamp(ts / 1000.0, tz=datetime.UTC)
+                    StepReminder.objects.create(
+                        step=self, day_of_week=day, is_active=True, reminder_time=dt
+                    )
+
+
+class StepReminder(models.Model):
+    """
+    Stores reminder settings for a routine step.
+    The reminder_time is stored as a DateTimeField in UTC.
+    """
+
+    step = models.ForeignKey(RoutineStep, on_delete=models.CASCADE, related_name="reminders")
+    day_of_week = models.CharField(max_length=3, choices=RoutineStep.DAY_CHOICES)
+    is_active = models.BooleanField(default=True)
+    reminder_time = models.DateTimeField(help_text="Scheduled reminder time stored in UTC")
+
+    class Meta:
+        unique_together = ["step", "day_of_week", "reminder_time"]
+        ordering = ["day_of_week", "reminder_time"]
+
+    def __str__(self):
+        return f"Reminder for {self.step} on {self.get_day_of_week_display()}"

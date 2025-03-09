@@ -22,9 +22,9 @@ class SkincareRoutinesMixin:
             .prefetch_related(
                 Prefetch(
                     "steps",
-                    queryset=RoutineStep.objects.select_related("product_type", "period").order_by(
-                        "sort_order", "day_of_week"
-                    ),
+                    queryset=RoutineStep.objects.select_related("product_type", "period")
+                    .prefetch_related("reminders")
+                    .order_by("sort_order", "day_of_week"),
                 )
             )
             .order_by("-created_at")
@@ -66,7 +66,8 @@ class SkincareRoutinesMixin:
         step = RoutineStep(
             routine=routine,  # ParentalKey needs the parent instance
             color=data.color,
-            product_name=data.product_name,
+            product_name=data.product.label if data.product.value == 0 else None,
+            product_id=None if data.product.value == 0 else data.product.value,
             notes=data.notes,
             period_id=data.period,
             product_type_id=data.product_type,
@@ -76,6 +77,11 @@ class SkincareRoutinesMixin:
 
         # Save the step
         step.save()
+
+        # Handle reminders if provided
+        if data.reminders and day in data.reminders:
+            reminder_data = {day: data.reminders[day]}
+            step.update_reminders(reminder_data)
 
         # Save the parent routine to ensure the relationship is properly set
         routine.save()

@@ -3,6 +3,7 @@ from typing import Dict, List, Optional
 
 from ninja import Schema
 
+from skincare_product.schemas import SkincareProductSchema
 from skincare_routine.models import RoutineStep
 
 
@@ -26,21 +27,46 @@ class SkincareRoutinePeriodSchema(Schema):
     name: str
 
 
+class ReminderTimeSchema(Schema):
+    is_active: bool
+    times: List[int]  # timestamps in milliseconds
+
+    class Config:
+        # Allow extra fields to be ignored
+        extra = "ignore"
+
+
 class SkincareRoutineStepSchema(Schema):
     id: Optional[int] = None
-    product: Optional[dict] = None
+    product: Optional[SkincareProductSchema] = None
     product_name: Optional[str] = None
     product_type: SkincareRoutineProductTypeSchema
     period: SkincareRoutinePeriodSchema
     day_of_week: str
+    reminders: Optional[ReminderTimeSchema] = None
     color: Optional[str] = None
     notes: Optional[str] = None
     sort_order: int
 
     @classmethod
     def model_validate(cls, obj):
+        # Process reminders
+        reminders_data = None
+        if obj.reminders.exists():
+            # Get all reminders for this step on the current day
+            day_reminders = obj.reminders.filter(day_of_week=obj.day_of_week)
+            if day_reminders.exists():
+                # Extract timestamps in milliseconds
+                reminder_times = [
+                    int(reminder.reminder_time.timestamp() * 1000) for reminder in day_reminders
+                ]
+                reminders_data = ReminderTimeSchema(
+                    is_active=day_reminders.first().is_active, times=reminder_times
+                )
+
         return cls(
             id=obj.id,
+            product=obj.product,
             product_name=obj.product_name,
             product_type=SkincareRoutineProductTypeSchema(
                 id=obj.product_type.id, name=obj.product_type.name
@@ -49,6 +75,7 @@ class SkincareRoutineStepSchema(Schema):
             day_of_week=obj.day_of_week,
             color=obj.color,
             notes=obj.notes,
+            reminders=reminders_data,
             sort_order=obj.sort_order,
         )
 
@@ -84,14 +111,24 @@ class RoutineOptionsSchema(Schema):
     days_of_week: List[Dict[str, str]]
 
 
+class ProductSelectionSchema(Schema):
+    value: int
+    label: str
+
+
 class CreateRoutineStepRequest(Schema):
     color: Optional[str]
     days_of_week: List[str]
-    product_name: str
+    product: ProductSelectionSchema
     notes: Optional[str] = None
     period: int
     skincare_routine: int
     product_type: int
+    reminders: Dict[str, ReminderTimeSchema]
+
+    class Config:
+        # Allow extra fields to be ignored
+        extra = "ignore"
 
 
 class UpdateRoutineStepRequest(Schema):
@@ -101,3 +138,8 @@ class UpdateRoutineStepRequest(Schema):
     notes: Optional[str] = None
     period: Optional[int] = None
     product_type: Optional[int] = None
+    reminders: Optional[Dict[str, ReminderTimeSchema]] = None
+
+    class Config:
+        # Allow extra fields to be ignored
+        extra = "ignore"

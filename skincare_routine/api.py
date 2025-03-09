@@ -89,9 +89,16 @@ class SkincareRoutinesController(SkincareRoutinesMixin):
             raise PermissionDenied("You are not allowed to update this step")
 
         # Update fields using dict comprehension to filter out None values
-        update_fields = {k: v for k, v in data.model_dump().items() if v is not None}
+        update_fields = {
+            k: v for k, v in data.model_dump().items() if v is not None and k != "reminders"
+        }
         for field, value in update_fields.items():
             setattr(step, field, value)
+
+        # Handle reminder updates if provided
+        if data.reminders is not None:
+            step.update_reminders(data.reminders)
+
         step.save()
 
         # Clear cache
