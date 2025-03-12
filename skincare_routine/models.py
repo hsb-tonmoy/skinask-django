@@ -3,7 +3,7 @@ import datetime
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import models
-from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from wagtail.admin.panels import FieldPanel, InlinePanel
@@ -66,9 +66,9 @@ class SkincareRoutine(ClusterableModel):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="skincare_routines",
-        help_text="The user who created this routine",
+        help_text=_("The user who created this routine"),
     )
-    description = models.TextField(help_text="Brief description of this routine", blank=True)
+    description = models.TextField(help_text=_("Brief description of this routine"), blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -109,13 +109,13 @@ class RoutineStep(Orderable):
     """
 
     DAY_CHOICES = [
-        ("MON", "Monday"),
-        ("TUE", "Tuesday"),
-        ("WED", "Wednesday"),
-        ("THU", "Thursday"),
-        ("FRI", "Friday"),
-        ("SAT", "Saturday"),
-        ("SUN", "Sunday"),
+        ("MON", _("Monday")),
+        ("TUE", _("Tuesday")),
+        ("WED", _("Wednesday")),
+        ("THU", _("Thursday")),
+        ("FRI", _("Friday")),
+        ("SAT", _("Saturday")),
+        ("SUN", _("Sunday")),
     ]
 
     routine = ParentalKey(SkincareRoutine, on_delete=models.CASCADE, related_name="steps")
@@ -123,7 +123,7 @@ class RoutineStep(Orderable):
         max_length=255,
         null=True,
         blank=True,
-        help_text="Name of the product if not selecting from catalog",
+        help_text=_("Name of the product if not selecting from catalog"),
     )
     product = models.ForeignKey(
         SkincareProduct,
@@ -140,7 +140,7 @@ class RoutineStep(Orderable):
     )
     day_of_week = models.CharField(max_length=3, choices=DAY_CHOICES, default="MON")
     color = models.CharField(
-        max_length=255, null=True, blank=True, help_text="Color code for the step (e.g. #FF0000)"
+        max_length=255, null=True, blank=True, help_text=_("Color code for the step (e.g. #FF0000)")
     )
     notes = models.TextField(null=True, blank=True)
 
@@ -199,7 +199,7 @@ class StepReminder(models.Model):
     step = models.ForeignKey(RoutineStep, on_delete=models.CASCADE, related_name="reminders")
     day_of_week = models.CharField(max_length=3, choices=RoutineStep.DAY_CHOICES)
     is_active = models.BooleanField(default=True)
-    reminder_time = models.DateTimeField(help_text="Scheduled reminder time stored in UTC")
+    reminder_time = models.DateTimeField(help_text=_("Scheduled reminder time stored in UTC"))
 
     class Meta:
         unique_together = ["step", "day_of_week", "reminder_time"]
