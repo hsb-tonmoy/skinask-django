@@ -48,7 +48,9 @@ class SkincareRoutinesMixin:
                 for product_type in product_types
             ],
             periods=[{"value": period.id, "label": period.name} for period in periods],
-            days_of_week=[{"value": day[0], "label": day[1]} for day in RoutineStep.DAY_CHOICES],
+            days_of_week=[
+                {"value": day[0], "label": str(day[1])} for day in RoutineStep.DAY_CHOICES
+            ],
         )
 
     def create_routine_step(self, routine: SkincareRoutine, data: dict, day: str) -> RoutineStep:

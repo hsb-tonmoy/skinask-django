@@ -29,7 +29,7 @@ class SkincareRoutinePeriodSchema(Schema):
 
 class ReminderTimeSchema(Schema):
     is_active: bool
-    times: List[int]  # timestamps in milliseconds
+    time: int  # timestamp in milliseconds
 
     class Config:
         # Allow extra fields to be ignored
@@ -56,12 +56,11 @@ class SkincareRoutineStepSchema(Schema):
             # Get all reminders for this step on the current day
             day_reminders = obj.reminders.filter(day_of_week=obj.day_of_week)
             if day_reminders.exists():
-                # Extract timestamps in milliseconds
-                reminder_times = [
-                    int(reminder.reminder_time.timestamp() * 1000) for reminder in day_reminders
-                ]
+                # Extract timestamp in milliseconds (single value now)
+                reminder = day_reminders.first()
+                reminder_time = int(reminder.reminder_time.timestamp() * 1000)
                 reminders_data = ReminderTimeSchema(
-                    is_active=day_reminders.first().is_active, times=reminder_times
+                    is_active=reminder.is_active, time=reminder_time
                 )
 
         return cls(

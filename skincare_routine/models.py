@@ -170,8 +170,8 @@ class RoutineStep(Orderable):
 
         The expected reminder_data format:
         {
-            "MON": {"is_active": True, "times": [timestamp_in_ms, ...]},
-            "TUE": {"is_active": True, "times": [timestamp_in_ms, ...]},
+            "MON": {"is_active": True, "time": timestamp_in_ms},
+            "TUE": {"is_active": True, "time": timestamp_in_ms},
             ...
         }
         """
@@ -180,14 +180,13 @@ class RoutineStep(Orderable):
             self.reminders.filter(day_of_week=day).delete()
 
             if (
-                data.is_active and data.times
-            ):  # Check if both is_active is True and times list is not empty
-                for ts in data.times:
-                    # Convert from milliseconds to seconds, then to a datetime object in UTC.
-                    dt = datetime.datetime.fromtimestamp(ts / 1000.0, tz=datetime.UTC)
-                    StepReminder.objects.create(
-                        step=self, day_of_week=day, is_active=True, reminder_time=dt
-                    )
+                data.is_active and hasattr(data, "time") and data.time
+            ):  # Check if both is_active is True and time is provided
+                # Convert from milliseconds to seconds, then to a datetime object in UTC.
+                dt = datetime.datetime.fromtimestamp(data.time / 1000.0, tz=datetime.UTC)
+                StepReminder.objects.create(
+                    step=self, day_of_week=day, is_active=True, reminder_time=dt
+                )
 
 
 class StepReminder(models.Model):
