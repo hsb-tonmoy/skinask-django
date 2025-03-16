@@ -68,9 +68,11 @@ class SkincareRoutinesController(SkincareRoutinesMixin):
 
         routine = get_object_or_404(self.get_queryset(), id=data.skincare_routine)
 
-        # Create steps for each day
+        # Create steps for each day and track their IDs
+        created_step_ids = []
         for day in data.days_of_week:
-            self.create_routine_step(routine, data, day)
+            step = self.create_routine_step(routine, data, day)
+            created_step_ids.append(step.id)
 
         # Clear cache
         cache.delete(f"routine_weekly_data_{routine.id}")
@@ -79,7 +81,8 @@ class SkincareRoutinesController(SkincareRoutinesMixin):
         # Get a fresh instance of the routine with all steps
         updated_routine = self.get_object(routine.id)
 
-        return self.format_routine_response(updated_routine)
+        # Format response with just_created flag
+        return self.format_routine_response(updated_routine, created_step_ids)
 
     @route.patch("/steps/{int:step_id}", response=WeeklyRoutineSchema)
     def update_routine_step(self, step_id: int, data: UpdateRoutineStepRequest):

@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from django.db.models import Prefetch, QuerySet
 from django.shortcuts import get_object_or_404
@@ -34,9 +34,19 @@ class SkincareRoutinesMixin:
         """Get single routine with optimized prefetch_related"""
         return get_object_or_404(self.get_queryset(), pk=pk)
 
-    def format_routine_response(self, routine: SkincareRoutine) -> Dict:
+    def format_routine_response(
+        self, routine: SkincareRoutine, created_step_ids: List[int] = None
+    ) -> Dict:
         """Format routine data for frontend consumption"""
-        return WeeklyRoutineSchema.from_orm(routine).model_dump()
+        routine_data = WeeklyRoutineSchema.from_orm(routine).model_dump()
+
+        # If we have newly created step IDs, mark them in the response
+        if created_step_ids:
+            for day, steps in routine_data["days"].items():
+                for step in steps:
+                    step["just_created"] = step["id"] in created_step_ids
+
+        return routine_data
 
     def get_routine_steps_options(self) -> RoutineOptionsSchema:
         """Get all options needed for routine creation/editing"""

@@ -47,6 +47,7 @@ class SkincareRoutineStepSchema(Schema):
     color: Optional[str] = None
     notes: Optional[str] = None
     sort_order: int
+    just_created: bool = False
 
     @classmethod
     def model_validate(cls, obj):
