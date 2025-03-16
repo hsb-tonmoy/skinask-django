@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 from ninja import Schema
 
-from skincare_product.schemas import SkincareProductSchema
+from skincare_product.schemas import SkincareProductCategorySchema, SkincareProductSchema
 from skincare_routine.models import RoutineStep
 
 
@@ -64,9 +64,38 @@ class SkincareRoutineStepSchema(Schema):
                     is_active=reminder.is_active, time=reminder_time
                 )
 
+        # Convert product to SkincareProductSchema if it exists
+        product_data = None
+        if obj.product:
+            # Handle product image safely
+            product_image = None
+            if obj.product.product_image:
+                try:
+                    product_image = obj.product.product_image.get_rendition("original").url
+                except Exception:
+                    # If there's any issue with the rendition, try to get the direct URL
+                    try:
+                        product_image = obj.product.product_image.url
+                    except Exception:
+                        # If all else fails, leave as None
+                        pass
+
+            product_data = SkincareProductSchema(
+                id=obj.product.id,
+                product_name=obj.product.product_name,
+                product_image=product_image,
+                product_category=[
+                    SkincareProductCategorySchema(
+                        id=category.id, name=category.name, description=category.description
+                    )
+                    for category in obj.product.product_category.all()
+                ],
+                product_price=float(obj.product.product_price),
+            )
+
         return cls(
             id=obj.id,
-            product=obj.product,
+            product=product_data,
             product_name=obj.product_name,
             product_type=SkincareRoutineProductTypeSchema(
                 id=obj.product_type.id, name=obj.product_type.name
