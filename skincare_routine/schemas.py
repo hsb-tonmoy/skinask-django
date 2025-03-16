@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 from ninja import Schema
 
-from skincare_product.schemas import SkincareProductSchema
+from skincare_product.schemas import SkincareProductCategorySchema, SkincareProductSchema
 from skincare_routine.models import RoutineStep
 
 
@@ -29,7 +29,7 @@ class SkincareRoutinePeriodSchema(Schema):
 
 class ReminderTimeSchema(Schema):
     is_active: bool
-    times: List[int]  # timestamps in milliseconds
+    time: int  # timestamp in milliseconds
 
     class Config:
         # Allow extra fields to be ignored
@@ -47,6 +47,7 @@ class SkincareRoutineStepSchema(Schema):
     color: Optional[str] = None
     notes: Optional[str] = None
     sort_order: int
+    just_created: bool = False
 
     @classmethod
     def model_validate(cls, obj):
@@ -56,17 +57,45 @@ class SkincareRoutineStepSchema(Schema):
             # Get all reminders for this step on the current day
             day_reminders = obj.reminders.filter(day_of_week=obj.day_of_week)
             if day_reminders.exists():
-                # Extract timestamps in milliseconds
-                reminder_times = [
-                    int(reminder.reminder_time.timestamp() * 1000) for reminder in day_reminders
-                ]
+                # Extract timestamp in milliseconds (single value now)
+                reminder = day_reminders.first()
+                reminder_time = int(reminder.reminder_time.timestamp() * 1000)
                 reminders_data = ReminderTimeSchema(
-                    is_active=day_reminders.first().is_active, times=reminder_times
+                    is_active=reminder.is_active, time=reminder_time
                 )
+
+        # Convert product to SkincareProductSchema if it exists
+        product_data = None
+        if obj.product:
+            # Handle product image safely
+            product_image = None
+            if obj.product.product_image:
+                try:
+                    product_image = obj.product.product_image.get_rendition("original").url
+                except Exception:
+                    # If there's any issue with the rendition, try to get the direct URL
+                    try:
+                        product_image = obj.product.product_image.url
+                    except Exception:
+                        # If all else fails, leave as None
+                        pass
+
+            product_data = SkincareProductSchema(
+                id=obj.product.id,
+                product_name=obj.product.product_name,
+                product_image=product_image,
+                product_category=[
+                    SkincareProductCategorySchema(
+                        id=category.id, name=category.name, description=category.description
+                    )
+                    for category in obj.product.product_category.all()
+                ],
+                product_price=float(obj.product.product_price),
+            )
 
         return cls(
             id=obj.id,
-            product=obj.product,
+            product=product_data,
             product_name=obj.product_name,
             product_type=SkincareRoutineProductTypeSchema(
                 id=obj.product_type.id, name=obj.product_type.name
