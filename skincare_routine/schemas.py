@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from ninja import Schema
 
@@ -137,7 +137,7 @@ class WeeklyRoutineSchema(Schema):
 class RoutineOptionsSchema(Schema):
     product_types: List[SkincareRoutineOptionsProductTypeSchema]
     periods: List[SkincareRoutineOptionsPeriodSchema]
-    days_of_week: List[Dict[str, str]]
+    days_of_week: List[Dict[str, Union[str, int, bool]]]
 
 
 class ProductSelectionSchema(Schema):

@@ -1,5 +1,7 @@
+from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
+import pytz
 from django.db.models import Prefetch, QuerySet
 from django.shortcuts import get_object_or_404
 
@@ -52,15 +54,69 @@ class SkincareRoutinesMixin:
         """Get all options needed for routine creation/editing"""
         product_types = SkincareRoutineProductType.objects.all()
         periods = SkincareRoutinePeriod.objects.all()
+
+        # Get user's timezone
+        user_timezone = pytz.timezone(self.context.request.user.timezone)
+
+        # Get current date in user's timezone
+        now = datetime.now(user_timezone)
+        today = now.date()
+
+        # Map weekday to day code
+        day_code_map = {
+            0: "MON",  # Monday
+            1: "TUE",  # Tuesday
+            2: "WED",  # Wednesday
+            3: "THU",  # Thursday
+            4: "FRI",  # Friday
+            5: "SAT",  # Saturday
+            6: "SUN",  # Sunday
+        }
+
+        # Get the current weekday (0=Monday, 6=Sunday)
+        current_weekday = today.weekday()
+        current_day_code = day_code_map[current_weekday]
+
+        # Map day codes to weekday numbers (0-6)
+        day_weekday_map = {
+            "MON": 0,
+            "TUE": 1,
+            "WED": 2,
+            "THU": 3,
+            "FRI": 4,
+            "SAT": 5,
+            "SUN": 6,
+        }
+
+        days_of_week = []
+        for day in RoutineStep.DAY_CHOICES:
+            day_code = day[0]  # This is 'MON', 'TUE', etc.
+            weekday_number = day_weekday_map[day_code]
+
+            # Calculate the date for this day of the week
+            # If weekday_number < current_weekday, it's in the next week
+            days_diff = weekday_number - current_weekday
+            if days_diff < 0:
+                days_diff += 7
+
+            date_for_day = today + timedelta(days=days_diff)
+
+            days_of_week.append(
+                {
+                    "value": day_code,
+                    "label": str(day[1]),
+                    "date": date_for_day.day,  # Day of the month (1-31)
+                    "is_today": day_code == current_day_code,
+                }
+            )
+
         return RoutineOptionsSchema(
             product_types=[
                 {"value": product_type.id, "label": product_type.name}
                 for product_type in product_types
             ],
             periods=[{"value": period.id, "label": period.name} for period in periods],
-            days_of_week=[
-                {"value": day[0], "label": str(day[1])} for day in RoutineStep.DAY_CHOICES
-            ],
+            days_of_week=days_of_week,
         )
 
     def create_routine_step(self, routine: SkincareRoutine, data: dict, day: str) -> RoutineStep:
