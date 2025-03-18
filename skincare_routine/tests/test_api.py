@@ -125,13 +125,17 @@ class TestSkincareRoutinesController:
 
         data = {
             "skincare_routine": skincare_routine.id,
-            "days_of_week": ["mon", "wed", "fri"],
+            "days_of_week": ["MON", "WED", "FRI"],
             "product": {"value": 0, "label": "Test Product"},
             "product_type": product_type.id,
             "period": period.id,
             "color": "#FF5733",
             "notes": "Test notes",
-            "reminders": {},
+            "reminders": {
+                "MON": {"is_active": True, "time": 1742302800000},
+                "WED": {"is_active": True, "time": 1742302800000},
+                "FRI": {"is_active": True, "time": 1742302800000},
+            },
         }
 
         response = client.post(
@@ -140,13 +144,28 @@ class TestSkincareRoutinesController:
 
         assert response.status_code == 200
 
-        [response_data] = response.json()
+        response_data = response.json()
 
-        assert response_data["product_name"] == "Test Product"
-        assert response_data["product_type"] == product_type.id
-        assert response_data["period"] == period.id
-        assert response_data["color"] == "#FF5733"
-        assert response_data["notes"] == "Test notes"
+        # Check that the routine is in the response
+        assert response_data["id"] == skincare_routine.id
+        assert response_data["title"] == skincare_routine.title
+
+        # Check that steps were created for each day in the days dictionary
+        assert "MON" in response_data["days"]
+        assert "WED" in response_data["days"]
+        assert "FRI" in response_data["days"]
+
+        # Check the first item in each day has the correct properties
+        for day in ["MON", "WED", "FRI"]:
+            day_steps = response_data["days"][day]
+            assert len(day_steps) == 1
+            step = day_steps[0]
+            assert step["product_name"] == "Test Product"
+            assert step["product_type"]["id"] == product_type.id
+            assert step["period"]["id"] == period.id
+            assert step["color"] == "#FF5733"
+            assert step["notes"] == "Test notes"
+            assert step["day_of_week"] == day
 
         # Check that steps were created for each day
         routine_steps = RoutineStep.objects.filter(routine=skincare_routine)
@@ -154,7 +173,7 @@ class TestSkincareRoutinesController:
 
         # Check days of week
         days = [step.day_of_week for step in routine_steps]
-        assert set(days) == set(["mon", "wed", "fri"])
+        assert set(days) == set(["MON", "WED", "FRI"])
 
     def test_update_routine_step(self, client, refresh, routine_step):
         """Test updating a routine step."""
