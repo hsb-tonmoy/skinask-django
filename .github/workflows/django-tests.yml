@@ -42,9 +42,13 @@ jobs:
 
       - name: Set up environment variables
         run: |
-          echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/github_actions" >> $GITHUB_ENV
           echo "DJANGO_SETTINGS_MODULE=skinask_backend.settings.test" >> $GITHUB_ENV
           echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> $GITHUB_ENV
+          echo "POSTGRES_TEST_DB=github_actions" >> $GITHUB_ENV
+          echo "POSTGRES_TEST_USER=postgres" >> $GITHUB_ENV
+          echo "POSTGRES_TEST_PASSWORD=postgres" >> $GITHUB_ENV
+          echo "POSTGRES_TEST_HOST=localhost" >> $GITHUB_ENV
+          echo "POSTGRES_TEST_PORT=5432" >> $GITHUB_ENV
 
       - name: Run tests
         run: |
