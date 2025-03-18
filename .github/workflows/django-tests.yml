@@ -44,6 +44,7 @@ jobs:
         run: |
           echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/github_actions" >> $GITHUB_ENV
           echo "DJANGO_SETTINGS_MODULE=skinask_backend.settings.test" >> $GITHUB_ENV
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> $GITHUB_ENV
 
       - name: Run tests
         run: |
