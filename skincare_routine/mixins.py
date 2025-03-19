@@ -77,6 +77,9 @@ class SkincareRoutinesMixin:
         current_weekday = today.weekday()
         current_day_code = day_code_map[current_weekday]
 
+        # Calculate the date for Monday of the current week
+        monday_date = today - timedelta(days=current_weekday)
+
         # Map day codes to weekday numbers (0-6)
         day_weekday_map = {
             "MON": 0,
@@ -93,13 +96,8 @@ class SkincareRoutinesMixin:
             day_code = day[0]  # This is 'MON', 'TUE', etc.
             weekday_number = day_weekday_map[day_code]
 
-            # Calculate the date for this day of the week
-            # If weekday_number < current_weekday, it's in the next week
-            days_diff = weekday_number - current_weekday
-            if days_diff < 0:
-                days_diff += 7
-
-            date_for_day = today + timedelta(days=days_diff)
+            # Calculate the date for this day of the current week
+            date_for_day = monday_date + timedelta(days=weekday_number)
 
             days_of_week.append(
                 {
