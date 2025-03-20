@@ -48,6 +48,7 @@ class SkincareRoutineStepSchema(Schema):
     notes: Optional[str] = None
     sort_order: int
     just_created: bool = False
+    is_completed: bool = False
 
     @classmethod
     def model_validate(cls, obj):
@@ -106,6 +107,7 @@ class SkincareRoutineStepSchema(Schema):
             notes=obj.notes,
             reminders=reminders_data,
             sort_order=obj.sort_order,
+            is_completed=obj.is_completed,
         )
 
 
@@ -168,6 +170,7 @@ class UpdateRoutineStepRequest(Schema):
     period: Optional[int] = None
     product_type: Optional[int] = None
     reminders: Optional[Dict[str, ReminderTimeSchema]] = None
+    is_completed: Optional[bool] = None
 
     class Config:
         # Allow extra fields to be ignored

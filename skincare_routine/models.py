@@ -119,6 +119,7 @@ class RoutineStep(Orderable):
     ]
 
     routine = ParentalKey(SkincareRoutine, on_delete=models.CASCADE, related_name="steps")
+    is_completed = models.BooleanField(default=False)
     product_name = models.CharField(
         max_length=255,
         null=True,
@@ -146,6 +147,7 @@ class RoutineStep(Orderable):
 
     panels = [
         FieldPanel("product_name"),
+        FieldPanel("is_completed"),
         FieldPanel("product_type"),
         FieldPanel("period"),
         FieldPanel("day_of_week"),
