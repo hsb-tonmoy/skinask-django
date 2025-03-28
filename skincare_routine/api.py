@@ -7,10 +7,16 @@ from ninja_extra.exceptions import PermissionDenied
 from ninja_jwt.authentication import JWTAuth
 
 from skincare_routine.mixins import SkincareRoutinesMixin
-from skincare_routine.models import RoutineStep, SkincareRoutine
+from skincare_routine.models import (
+    RoutineStep,
+    SkincareRoutine,
+    SkincareRoutinePeriod,
+    SkincareRoutineProductType,
+)
 from skincare_routine.schemas import (
     CreateRoutineStepRequest,
     RoutineOptionsSchema,
+    ToggleRoutineStepResponse,
     UpdateRoutineStepRequest,
     WeeklyRoutineSchema,
 )
@@ -95,8 +101,19 @@ class SkincareRoutinesController(SkincareRoutinesMixin):
         update_fields = {
             k: v for k, v in data.model_dump().items() if v is not None and k != "reminders"
         }
+
+        # Handle foreign key references properly
         for field, value in update_fields.items():
-            setattr(step, field, value)
+            if field == "period" and isinstance(value, int):
+                # Get the actual period object
+                period_obj = get_object_or_404(SkincareRoutinePeriod, id=value)
+                setattr(step, field, period_obj)
+            elif field == "product_type" and isinstance(value, int):
+                # Get the actual product type object
+                product_type_obj = get_object_or_404(SkincareRoutineProductType, id=value)
+                setattr(step, field, product_type_obj)
+            else:
+                setattr(step, field, value)
 
         # Handle reminder updates if provided
         if data.reminders is not None:
@@ -109,6 +126,21 @@ class SkincareRoutinesController(SkincareRoutinesMixin):
         cache.delete(f"routines_{self.context.request.auth.id}")
 
         return self.format_routine_response(step.routine)
+
+    @route.patch("/steps/toggle/{int:step_id}", response=ToggleRoutineStepResponse)
+    def toggle_routine_step(self, step_id: int):
+        """Toggle a specific routine step's completion status and return just the new status"""
+        step = get_object_or_404(RoutineStep, id=step_id)
+        if step.routine.created_by != self.context.request.auth:
+            raise PermissionDenied("You are not allowed to update this step")
+
+        step.toggle_is_completed()
+
+        # Clear cache
+        cache.delete(f"routine_weekly_data_{step.routine.id}")
+        cache.delete(f"routines_{self.context.request.auth.id}")
+
+        return {"is_completed": step.is_completed}
 
     @route.delete("/steps/{int:step_id}", response=WeeklyRoutineSchema)
     def delete_routine_step(self, step_id: int):

@@ -166,6 +166,10 @@ class RoutineStep(Orderable):
         # Clear any cached data that might depend on this step
         self.routine.clear_cache()
 
+    def toggle_is_completed(self):
+        self.is_completed = not self.is_completed
+        self.save()
+
     def update_reminders(self, reminder_data):
         """
         Update reminders for this step based on frontend data.

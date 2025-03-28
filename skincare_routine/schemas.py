@@ -43,7 +43,7 @@ class SkincareRoutineStepSchema(Schema):
     product_type: SkincareRoutineProductTypeSchema
     period: SkincareRoutinePeriodSchema
     day_of_week: str
-    reminders: Optional[ReminderTimeSchema] = None
+    reminders: Optional[Dict[str, ReminderTimeSchema]] = None
     color: Optional[str] = None
     notes: Optional[str] = None
     sort_order: int
@@ -61,9 +61,12 @@ class SkincareRoutineStepSchema(Schema):
                 # Extract timestamp in milliseconds (single value now)
                 reminder = day_reminders.first()
                 reminder_time = int(reminder.reminder_time.timestamp() * 1000)
-                reminders_data = ReminderTimeSchema(
-                    is_active=reminder.is_active, time=reminder_time
-                )
+                # Format as dictionary with day of week as key instead of direct ReminderTimeSchema
+                reminders_data = {
+                    obj.day_of_week: ReminderTimeSchema(
+                        is_active=reminder.is_active, time=reminder_time
+                    )
+                }
 
         # Convert product to SkincareProductSchema if it exists
         product_data = None
@@ -175,3 +178,7 @@ class UpdateRoutineStepRequest(Schema):
     class Config:
         # Allow extra fields to be ignored
         extra = "ignore"
+
+
+class ToggleRoutineStepResponse(Schema):
+    is_completed: bool
