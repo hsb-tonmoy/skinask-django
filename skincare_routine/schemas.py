@@ -182,3 +182,17 @@ class UpdateRoutineStepRequest(Schema):
 
 class ToggleRoutineStepResponse(Schema):
     is_completed: bool
+
+
+class SingleRoutineStepResponse(Schema):
+    """Response schema for a single routine step (for create/update/delete operations)"""
+
+    step: SkincareRoutineStepSchema
+    routine_id: int
+
+    @classmethod
+    def from_step(cls, step, just_created=False):
+        step_schema = SkincareRoutineStepSchema.model_validate(step)
+        if just_created:
+            step_schema.just_created = True
+        return cls(step=step_schema, routine_id=step.routine.id)

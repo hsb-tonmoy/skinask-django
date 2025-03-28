@@ -16,6 +16,7 @@ from skincare_routine.models import (
 from skincare_routine.schemas import (
     CreateRoutineStepRequest,
     RoutineOptionsSchema,
+    SingleRoutineStepResponse,
     ToggleRoutineStepResponse,
     UpdateRoutineStepRequest,
     WeeklyRoutineSchema,
@@ -90,7 +91,7 @@ class SkincareRoutinesController(SkincareRoutinesMixin):
         # Format response with just_created flag
         return self.format_routine_response(updated_routine, created_step_ids)
 
-    @route.patch("/steps/{int:step_id}", response=WeeklyRoutineSchema)
+    @route.patch("/steps/{int:step_id}", response=SingleRoutineStepResponse)
     def update_routine_step(self, step_id: int, data: UpdateRoutineStepRequest):
         """Update a specific routine step"""
         step = get_object_or_404(RoutineStep, id=step_id)
@@ -125,7 +126,7 @@ class SkincareRoutinesController(SkincareRoutinesMixin):
         cache.delete(f"routine_weekly_data_{step.routine.id}")
         cache.delete(f"routines_{self.context.request.auth.id}")
 
-        return self.format_routine_response(step.routine)
+        return SingleRoutineStepResponse.from_step(step)
 
     @route.patch("/steps/toggle/{int:step_id}", response=ToggleRoutineStepResponse)
     def toggle_routine_step(self, step_id: int):
@@ -142,14 +143,19 @@ class SkincareRoutinesController(SkincareRoutinesMixin):
 
         return {"is_completed": step.is_completed}
 
-    @route.delete("/steps/{int:step_id}", response=WeeklyRoutineSchema)
+    @route.delete("/steps/{int:step_id}", response=SingleRoutineStepResponse)
     def delete_routine_step(self, step_id: int):
-        """Delete a specific routine step"""
+        """Delete a specific routine step and return the deleted step data"""
         step = get_object_or_404(RoutineStep, id=step_id)
         if step.routine.created_by != self.context.request.auth:
             raise PermissionDenied("You are not allowed to delete this step")
 
+        # Save step data and routine ID before deletion
+        routine_id = step.routine.id
+        step_data = SingleRoutineStepResponse.from_step(step)
+
         step.delete()
-        cache.delete(f"routine_weekly_data_{step.routine.id}")
+        cache.delete(f"routine_weekly_data_{routine_id}")
         cache.delete(f"routines_{self.context.request.auth.id}")
-        return self.format_routine_response(step.routine)
+
+        return step_data
