@@ -44,3 +44,27 @@ class UserProfileSchema(Schema):
         if len(value) > 150:  # Django's default max_length for these fields
             raise ValueError(_("Name is too long"))
         return value
+
+
+# OAuth schemas
+class GoogleAuthorizeSchema(Schema):
+    client_id: str
+    redirect_uri: str
+    state: Optional[str] = None
+    scope: Optional[str] = None
+
+
+class GoogleCallbackSchema(Schema):
+    code: Optional[str] = None
+    state: Optional[str] = None
+    error: Optional[str] = None
+
+
+class GoogleTokenRequest(Schema):
+    code: str
+    platform: str = "native"
+
+
+class TokenResponse(Schema):
+    access_token: str
+    refresh_token: str
