@@ -3,9 +3,11 @@ from urllib.parse import urlparse
 
 import jwt
 import requests
+from allauth.headless.socialaccount.views import complete_token_login
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseRedirect
 from django.utils.translation import gettext_lazy as _
+from ninja import Form
 from ninja_extra import api_controller, http_get, http_patch, http_post
 from ninja_jwt.authentication import JWTAuth
 
@@ -17,7 +19,7 @@ from .constants import (
     GOOGLE_CLIENT_SECRET,
     GOOGLE_TOKEN_URL,
 )
-from .schemas import TokenResponse, UserProfileSchema
+from .schemas import TokenRequest, TokenResponse, UserProfileSchema
 
 
 class CustomHttpResponseRedirect(HttpResponseRedirect):
@@ -160,12 +162,12 @@ class AuthController:
         return response
 
     @http_post("/token", response=TokenResponse)
-    def token(self, code: str, platform: str = "native"):
+    def token(self, data: TokenRequest = Form(...)):
         """
         Exchanges an authorization code for access and refresh tokens.
         For mobile apps only.
         """
-        if not code:
+        if not data.code:
             return {"error": "Missing authorization code"}, 400
 
         # Exchange the code for tokens with Google
@@ -174,7 +176,7 @@ class AuthController:
             "client_secret": GOOGLE_CLIENT_SECRET,
             "redirect_uri": f"{BASE_URL}/api/auth/callback",
             "grant_type": "authorization_code",
-            "code": code,
+            "code": data.code,
         }
 
         response = requests.post(GOOGLE_TOKEN_URL, data=token_request_data)
@@ -190,40 +192,8 @@ class AuthController:
         if not google_data.get("id_token"):
             return {"error": "Missing required parameters"}, 400
 
+        # Add client_id to the response
+        google_data["client_id"] = GOOGLE_CLIENT_ID
+
         # Return entire google_data
         return google_data
-
-        # Decode the ID token to get user info
-        # user_info = jwt.decode(
-        #     google_data["id_token"],
-        #     options={"verify_signature": False}
-        # )
-
-        # # Get or create a user based on the Google information
-        # User = get_user_model()
-        # email = user_info.get("email")
-
-        # if not email or not user_info.get("email_verified"):
-        #     return {"error": "Email not verified or not provided"}, 400
-
-        # try:
-        #     # Try to find an existing user with this email
-        #     user = User.objects.get(email=email)
-        # except User.DoesNotExist:
-        #     # Create a new user
-        #     user = User(
-        #         email=email,
-        #         first_name=user_info.get("given_name", ""),
-        #         last_name=user_info.get("family_name", ""),
-        #     )
-        #     user.set_unusable_password()  # OAuth user doesn't need a password
-        #     user.save()
-
-        # # Generate tokens using ninja-jwt library which is already integrated
-        # from ninja_jwt.tokens import RefreshToken
-        # refresh = RefreshToken.for_user(user)
-
-        # return {
-        #     "access_token": str(refresh.access_token),
-        #     "refresh_token": str(refresh),
-        # }

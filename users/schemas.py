@@ -65,6 +65,16 @@ class GoogleTokenRequest(Schema):
     platform: str = "native"
 
 
+class TokenRequest(Schema):
+    code: str
+    platform: Optional[str] = None
+
+
 class TokenResponse(Schema):
     access_token: str
-    refresh_token: str
+    expires_in: int
+    scope: str
+    token_type: str
+    id_token: str
+    refresh_token: Optional[str] = None
+    client_id: Optional[str] = None
