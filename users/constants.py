@@ -2,6 +2,10 @@ import os
 from datetime import timedelta
 
 from django.conf import settings
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Google OAuth settings
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")

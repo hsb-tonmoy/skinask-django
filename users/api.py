@@ -1,4 +1,5 @@
 from typing import Optional
+from urllib.parse import urlparse
 
 import jwt
 import requests
@@ -17,6 +18,18 @@ from .constants import (
     GOOGLE_TOKEN_URL,
 )
 from .schemas import TokenResponse, UserProfileSchema
+
+
+class CustomHttpResponseRedirect(HttpResponseRedirect):
+    allowed_schemes = ["http", "https", "ftp"]
+
+    def __init__(self, redirect_to, *args, **kwargs):
+        # Get the scheme from the redirect_to URL
+        parsed = urlparse(str(redirect_to))
+        # Add the scheme to allowed_schemes if it matches our APP_SCHEME
+        if parsed.scheme:
+            self.allowed_schemes = list(self.allowed_schemes) + [parsed.scheme]
+        super().__init__(redirect_to, *args, **kwargs)
 
 
 @api_controller("/users", tags=["Users"], auth=JWTAuth())
@@ -102,8 +115,6 @@ class AuthController:
         # Use state to drive redirect back to platform
         state_param = f"{platform}|{state}" if state else platform
 
-        print("BASE_URL", BASE_URL)
-
         params = {
             "client_id": GOOGLE_CLIENT_ID,
             "redirect_uri": f"{BASE_URL}/api/auth/callback",
@@ -114,7 +125,8 @@ class AuthController:
         }
 
         url = f"{GOOGLE_AUTH_URL}?{'&'.join([f'{k}={v}' for k, v in params.items()])}"
-        response = HttpResponseRedirect(url)
+
+        response = CustomHttpResponseRedirect(url)
         response.status_code = 302
         return response
 
@@ -143,7 +155,7 @@ class AuthController:
 
         redirect_url = f"{APP_SCHEME}?{'&'.join(params)}"
 
-        response = HttpResponseRedirect(redirect_url)
+        response = CustomHttpResponseRedirect(redirect_url)
         response.status_code = 302
         return response
 
