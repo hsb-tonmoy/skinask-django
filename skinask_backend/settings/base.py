@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "wagtail.search",
     "wagtail.admin",
     "wagtail",
+    "wagtailmedia",
     "modelcluster",
     "taggit",
     "django.contrib.admin",
@@ -63,6 +64,7 @@ INSTALLED_APPS = [
     "users",
     "skincare_product",
     "skincare_routine",
+    "skincare_tracker",
 ]
 
 AUTH_USER_MODEL = "users.CustomUser"
